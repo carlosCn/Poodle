@@ -6,223 +6,156 @@
 #include <Windows.h>
 #include "d3d9.h"
 #include "d3dx9.h"
+#include "WindowBase.h"
+#include "camera.h"
 
 
-IDirect3DDevice9* device = 0; 
+CDeviceWIn32 *mWin32Device = NULL ;
+Camera *pCam = NULL ;
 
-const int width  = 640;
-const int height = 480;
-
+IDirect3DDevice9* device = NULL ; 
 IDirect3DVertexBuffer9* VB = 0;
-IDirect3DIndexBuffer9*  IB = 0;
 
+
+ID3DXMesh* pMesh[4] = {NULL , NULL , NULL , NULL};
+D3DXMATRIX Worlds[4] ;
+D3DMATERIAL9 pMeterial[4] ;
+D3DLIGHT9 light ;
+
+//背景纹理
+IDirect3DTexture9 *pBKTeture = NULL ;
 
 struct Vertex
 {
 	Vertex(){}
-	Vertex(float x, float y, float z)
+	Vertex(float x, float y, float z , float nx, float ny, float nz ,float u , float v)
 	{
 		_x = x;  _y = y;  _z = z;
+		_nx = nx;  _ny = ny;  _nz = nz;	
+		_u = u ;
+		_v = v  ;
+		//_color = color ;
 	}
 	float _x, _y, _z;
+	float _nx,_ny , _nz ;
+	float _u, _v ;
+	//D3DCOLOR _color ;
 	static const DWORD FVF;
 };
-const DWORD Vertex::FVF = D3DFVF_XYZ;
-
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-	switch( msg )
-	{
-	case WM_DESTROY:
-		::PostQuitMessage(0);
-		break;
-
-	case WM_KEYDOWN:
-		//if( wParam == VK_ESCAPE )
-			::DestroyWindow(hwnd);
-		break;
-	}
-	return ::DefWindowProc(hwnd, msg, wParam, lParam);
-}
-
-//创建窗口
-bool InitDevice()
-{
-	WNDCLASSEX wc;
-
-	HINSTANCE hInstance = GetModuleHandle(0);
-	wc.cbSize		 = sizeof(WNDCLASSEX) ;
-	wc.style         = CS_HREDRAW | CS_VREDRAW;
-	wc.lpfnWndProc   = WndProc; 
-	wc.cbClsExtra    = 0;
-	wc.cbWndExtra    = 0;
-	wc.hInstance     = hInstance;
-	wc.hIcon         = NULL;
-	wc.hCursor       = LoadCursor(0, IDC_ARROW);
-	wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
-	wc.lpszMenuName  = 0;
-	wc.lpszClassName = L"Direct3D9App";
-	wc.hIconSm = 0 ;
-
-	wc.hIcon = (HICON)LoadImage(hInstance, __TEXT("irrlicht.ico"), IMAGE_ICON, 0,0, LR_LOADFROMFILE);
-
-	if(NULL == RegisterClassEx(&wc))
-	{
-		return false;
-	}
-
-	HWND hwnd = 0;
-	DWORD style = WS_POPUPWINDOW | WS_CAPTION | WS_MINIMIZEBOX | WS_CLIPCHILDREN;
-	hwnd = ::CreateWindowEx(0,L"Direct3D9App", L"Direct3D9App", 
-		style ,
-		0, 0, width, height,
-		0 /*parent hwnd*/, 
-		0 /* menu */, 
-		hInstance,
-		0 /*extra*/); 
-	if (hwnd == NULL)
-	{
-		return false;
-	}
-
-	IDirect3D9* d3d9 = 0;
-	d3d9 = Direct3DCreate9(D3D_SDK_VERSION);
-
-
-	// Step 2: Check for hardware vp.
-	D3DCAPS9 caps;
-	d3d9->GetDeviceCaps(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &caps);
-
-	int vp = 0;
-	if( caps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT )
-		vp = D3DCREATE_HARDWARE_VERTEXPROCESSING;
-	else
-		vp = D3DCREATE_SOFTWARE_VERTEXPROCESSING;
-
-	// Step 3: Fill out the D3DPRESENT_PARAMETERS structure.
-	D3DPRESENT_PARAMETERS d3dpp;
-	d3dpp.BackBufferWidth            = width;
-	d3dpp.BackBufferHeight           = height;
-	d3dpp.BackBufferFormat           = D3DFMT_A8R8G8B8;
-	d3dpp.BackBufferCount            = 1;
-	d3dpp.MultiSampleType            = D3DMULTISAMPLE_NONE;
-	d3dpp.MultiSampleQuality         = 0;
-	d3dpp.SwapEffect                 = D3DSWAPEFFECT_DISCARD; 
-	d3dpp.hDeviceWindow              = hwnd;
-	d3dpp.Windowed                   = true;
-	d3dpp.EnableAutoDepthStencil     = true; 
-	d3dpp.AutoDepthStencilFormat     = D3DFMT_D24S8;
-	d3dpp.Flags                      = 0;
-	d3dpp.FullScreen_RefreshRateInHz = D3DPRESENT_RATE_DEFAULT;
-	d3dpp.PresentationInterval       = D3DPRESENT_INTERVAL_IMMEDIATE;
-
-	// Step 4: Create the device.
-	HRESULT hr = d3d9->CreateDevice(
-		D3DADAPTER_DEFAULT, // primary adapter
-		D3DDEVTYPE_HAL,         // device type
-		hwnd,               // window associated with device
-		vp,                 // vertex processing
-		&d3dpp,             // present parameters
-		&device);            // return created device
-
-	if( FAILED(hr) )
-	{
-		d3d9->Release(); // done with d3d9 object
-		return false;
-	}
-
-	d3d9->Release(); // done with d3d9 object
-
-	ShowWindow(hwnd,SW_SHOW);
-	UpdateWindow(hwnd);
-
-	return true ;
-}
+const DWORD Vertex::FVF = D3DFVF_XYZ /*| D3DFVF_DIFFUSE*/| D3DFVF_NORMAL | D3DFVF_TEX1  ;
 
 void ClearDevice()
 {
-	device->Release();
+	delete pCam ;
 }
 
 void PreDraw()
 {
+	pCam = new Camera ;
+
+	if (!pCam)
+		return ;
+
 	if (!device)
 		return ;
 
-	device->CreateVertexBuffer(4*sizeof(Vertex),0,Vertex::FVF,D3DPOOL_MANAGED,&VB,NULL);
-	device->CreateIndexBuffer(12*sizeof(DWORD),0,D3DFMT_INDEX32,D3DPOOL_MANAGED,&IB,NULL);
+	{
+		device->CreateVertexBuffer(6*sizeof(Vertex),0,Vertex::FVF,D3DPOOL_MANAGED,&VB,NULL);
+		//device->CreateIndexBuffer(12*sizeof(DWORD),0,D3DFMT_INDEX32,D3DPOOL_MANAGED,&IB,NULL);
 
-	Vertex *pBuffer = NULL ;
-	VB->Lock(0,0,(void**)(&pBuffer),0);
-	pBuffer[0] = Vertex(-2,0,0);
-	pBuffer[1] = Vertex(2,0,0);
-	pBuffer[2] = Vertex(0,0,2);
-	pBuffer[3] = Vertex(0,3,0);
+		Vertex *pBuffer = NULL ;
+		VB->Lock(0,0,(void**)(&pBuffer),0);
+		//pBuffer[0] = Vertex(-2,0,0,COLOR_RED);
+		//pBuffer[1] = Vertex(2,0,0,COLOR_GREEN);
+		//pBuffer[2] = Vertex(0,0,2,COLOR_BLUE);
+		//pBuffer[3] = Vertex(0,3,0,COLOR_RED);
+
+		//pBuffer[0] = Vertex(-2,-2,0, 0.0f, -0.707f, 0.707f, 0.0 ,1.0f);
+		//pBuffer[1] = Vertex( 2,-2,0, 0.0f, -0.707f, 0.707f, 1.0 ,0.0f);
+		//pBuffer[2] = Vertex(-2, 2,0, 0.0f, -0.707f, 0.707f, 0.0 ,1.0f);
+		//pBuffer[3] = Vertex(-2, 2,0, 0.0f, -0.707f, 0.707f, 1.0 ,0.0f);
 
 
-	VB->Unlock();
+		pBuffer[0] = Vertex(-10.0f, -10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+		pBuffer[1] = Vertex(-10.0f,  10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f);
+		pBuffer[2] = Vertex( 10.0f,  10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
 
-	DWORD *pIndex = NULL ;
-	IB->Lock(0,0,(void**)(&pIndex),0);
+		pBuffer[3] = Vertex(-10.0f, -10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f);
+		pBuffer[4] = Vertex( 10.0f,  10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f);
+		pBuffer[5] = Vertex( 10.0f, -10.0f, 5.0f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f);
 
-	pIndex[0] = 0 ;
-	pIndex[1] = 1 ;
-	pIndex[2] = 2 ;
+		VB->Unlock();	
+	}
 
-	pIndex[3] = 0 ;
-	pIndex[4] = 1 ;
-	pIndex[5] = 3 ;
 
-	pIndex[6] = 0 ;
-	pIndex[7] = 2 ;
-	pIndex[8] = 3 ;
+	D3DXCreateTeapot(device,&pMesh[0],NULL);
 
-	pIndex[9] = 1 ;
-	pIndex[10] = 2 ;
-	pIndex[11] = 3 ;
+	//D3DXCreateSphere(device, 1.0f, 20, 20, &pMesh[1], 0);
+	//D3DXCreateTorus(device, 0.5f, 1.0f, 20, 20 , &pMesh[2], 0);
+	//D3DXCreateCylinder(device, 0.5f, 0.5f, 2.0f, 20, 20, &pMesh[3], 0);
 
-	IB->Unlock();
+	pMeterial[0] = initMat(
+		D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)),
+		D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)),
+		D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)),
+		D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
+	pMeterial[1] = initMat(D3DXCOLOR(D3DCOLOR_XRGB(255,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(128,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,0,0)),
+		D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
+	//pMeterial[2] = initMat(D3DXCOLOR(D3DCOLOR_XRGB(255,255,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,255,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,255,0)),
+	//	D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
+	//pMeterial[3] = initMat(D3DXCOLOR(D3DCOLOR_XRGB(0,0,255)),D3DXCOLOR(D3DCOLOR_XRGB(0,0,255)),D3DXCOLOR(D3DCOLOR_XRGB(0,0,255)),
+	//	D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
+
+
 
 	//世界坐标系-->视觉坐标系-->透视投影表换-->视口变换
 
-	D3DXVECTOR3 CamPos(-5,5,5);
-	D3DXVECTOR3 targetPos(0,0,0);
-	D3DXVECTOR3 pUp(0,1,0);
-	D3DXMATRIX pout;
-	D3DXMatrixLookAtLH(&pout,&CamPos,&targetPos,&pUp);
-	device->SetTransform(D3DTS_VIEW,&pout);
-	
-	D3DXMATRIX pPerspective;
-	D3DXMatrixPerspectiveFovLH(&pPerspective,1.0 ,(float)width/(float)height,1.0,1000.0);
-	device->SetTransform(D3DTS_PROJECTION,&pPerspective);
 
-	//背面消隐
-	device->SetRenderState(D3DRS_CULLMODE,TRUE);
-	device->SetRenderState(D3DRS_FILLMODE,D3DFILL_WIREFRAME);
+	//摄像机需要的变换在这里进行
+//	pCam->InitCam(mWin32Device);
+	pCam->InitCam(mWin32Device,stPerspectiveParams(2.4,0.75,1.0,1000.0));
 
-	D3DVIEWPORT9 vp;
-	vp.X = 0 ; 
-	vp.Y = 0 ;
-	vp.Width = width ;
-	vp.Height = height ;
-	vp.MinZ = 0;
-	vp.MaxZ = 1;
-	device->SetViewport(&vp);
+	mWin32Device->InitRenderState();
+
+	light = initDirectLight(D3DXVECTOR3(0,0,1),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
+    //light = initSpotLight(D3DXVECTOR3(0,0,0),D3DXVECTOR3(0,0,1),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
+	//light = initPointLight(D3DXVECTOR3(0,0,0),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
+	device->SetRenderState(D3DRS_SPECULARENABLE , true) ;
+	device->SetRenderState(D3DRS_LIGHTING , true);
+	device->SetRenderState(D3DRS_NORMALIZENORMALS,true);
+	device->SetLight(0,&light);
+	device->LightEnable(0,true);
+
+
+	D3DXCreateTextureFromFile(device,L"crate.jpg",&pBKTeture);
+	device->SetSamplerState(0,D3DSAMP_MAGFILTER,D3DTEXF_LINEAR);
+	device->SetSamplerState(0,D3DSAMP_MINFILTER,D3DTEXF_LINEAR);
+	device->SetSamplerState(0,D3DSAMP_MIPFILTER,D3DTEXF_LINEAR);
+	device->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_WRAP);
+	device->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_WRAP);
+
+
+	device->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+	device->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
+
+	device->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
+	device->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
 }
 
-void Draw()
+void Draw(float timeDelta)
 {
 	//世界变换 
 	D3DXMATRIX pX,pY,p ;
-	static float angleX  = 1.0f;
-	static float angleY  = 0.0f;
-	D3DXMatrixRotationX(&pX,angleX);
-	D3DXMatrixRotationX(&pY,angleY);
+	//static float angleX  = 1.0f;
+	//static float angleY  = 1.0f;
+	//D3DXMatrixRotationX(&pX,angleX);
+	//D3DXMatrixRotationX(&pY,angleY);
 
-	//angleX += 0.05 ;
-	//angleY += 0.05;
+	//angleX += 0.0005 ;
+	//angleY += 0.0005;
 	//if (angleX > 6.28)
 	//{
+	//	angleX = 0 ;
 	//}
 
 	//if (angleY > 6.28)
@@ -230,37 +163,74 @@ void Draw()
 	//	angleY = 0 ;
 	//}
 
-	p = pX * pY ;
+	//p = pX * pY ;
 
-	device->SetTransform(D3DTS_WORLD,&p);
+	//device->SetTransform(D3DTS_WORLD,&p);
+
+
+	//static float angle = (3.0f * D3DX_PI) / 2.0f;
+
+	//if( ::GetAsyncKeyState(VK_NUMPAD6) & 0x8000f )
+	//	light.Direction.x -= 0.5;
+
+	//if( ::GetAsyncKeyState(VK_NUMPAD4) & 0x8000f )
+	//	light.Direction.x += 0.5;
+
+	//if( ::GetAsyncKeyState(VK_NUMPAD2) & 0x8000f )
+	//	light.Direction.y -= 0.5;
+
+	//if( ::GetAsyncKeyState(VK_NUMPAD8) & 0x8000f )
+	//	light.Direction.y += 0.5;
+
+	pCam->ChangeViewDir(mWin32Device,timeDelta);
+
 	device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
 
 	device->BeginScene();
+	{
+		D3DXMATRIX SRC ;
+		D3DXMatrixTranslation(&SRC,  0.0f,  0.0f, 0.0f);
+		device->SetTransform(D3DTS_WORLD, &SRC);
+		device->SetStreamSource(0,VB,0,sizeof(Vertex));
+		device->SetTexture(0,pBKTeture);
+		device->SetMaterial(&pMeterial[0]);
+		device->SetFVF(Vertex::FVF);
+		device->DrawPrimitive(D3DPT_TRIANGLELIST,0,2);
 
-	device->SetStreamSource(0,VB,0,sizeof(Vertex));
-	device->SetFVF(Vertex::FVF);
-	device->SetIndices(IB);
-	//device->DrawPrimitive(D3DPT_TRIANGLELIST,0,4);
 
-	device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST,0,0,4,0,4);
+		device->SetRenderState(D3DRS_ALPHABLENDENABLE, true);
+		D3DXMatrixTranslation(&SRC,  0.0f,  0.0f, 2.0f);
+		device->SetTransform(D3DTS_WORLD, &SRC);
+		device->SetMaterial(&pMeterial[1]);
+		pMesh[0]->DrawSubset(0);
+		device->SetRenderState(D3DRS_ALPHABLENDENABLE, false);
+
+	}
 
 	device->EndScene();
 	device->Present(0,0,0,0);
-
 }
 
 void  EndDraw()
 {
-	IB->Release();
 	VB->Release();
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
 	MSG msg;
-	bool initSuccess = InitDevice();
+	mWin32Device = new CDeviceWIn32(stCreateParams(800,600));
+	if (!mWin32Device)
+		return -1 ;
+
+	device = mWin32Device->GetVedioDevice();
+
+	if (!device)
+		return -1;
+
 	PreDraw();
 
-	while(initSuccess)
+	static float lastTime = (float)timeGetTime(); 
+	while(device)
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{
@@ -272,10 +242,13 @@ int _tmain(int argc, _TCHAR* argv[])
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-
-
-		Draw();
-
+		else
+		{
+			float currTime  = (float)timeGetTime();
+			float timeDelta = (currTime - lastTime)*0.001f;
+			Draw(timeDelta);
+			lastTime = currTime;
+		}
 	}
 
 	EndDraw();
