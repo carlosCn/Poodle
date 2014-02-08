@@ -33,6 +33,12 @@
     <ClInclude Include="Device.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="DrawObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BlendTest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Poodle.cpp">
@@ -45,6 +51,12 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Device.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BlendTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
