@@ -19,7 +19,7 @@ struct BlendTestVertex
 	//D3DCOLOR _color ;
 	static const DWORD FVF;
 };
-const DWORD BlendTestVertex::FVF = D3DFVF_XYZ /*| D3DFVF_DIFFUSE*/| D3DFVF_NORMAL | D3DFVF_TEX1  ;
+
 
 class CBlendTest:
 	public CDrawObject 
@@ -29,9 +29,12 @@ public:
 	~CBlendTest(void);
 
 	void preRender()   ;
-    void Render()      ;
+    void Render(float timeDelta)      ;
     void afterRender() ;
+    void changedir(float timeDelta)
+	{
 
+	}
 private:
 
 	ID3DXMesh* m_pMesh;

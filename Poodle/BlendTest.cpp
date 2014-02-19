@@ -1,7 +1,8 @@
+
+#include "public_define.h"
 #include "BlendTest.h"
-#include "d3d9.h"
-#include "d3dx9.h"
-#include "WindowBase.h"
+
+const DWORD BlendTestVertex::FVF = D3DFVF_XYZ /*| D3DFVF_DIFFUSE*/| D3DFVF_NORMAL | D3DFVF_TEX1  ;
 
 CBlendTest::CBlendTest(void):
 CrateTex(NULL),
@@ -37,10 +38,9 @@ void CBlendTest::preRender()
 
 	D3DXCreateTeapot(m_device,&m_pMesh,NULL);
 
-	pMeterial[0] = initMat(D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,255,0)),D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
-	pMeterial[1] = initMat(D3DXCOLOR(D3DCOLOR_XRGB(255,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(255,0,0)),D3DXCOLOR(D3DCOLOR_XRGB(0,0,0)),1.0);
+	pMeterial[0] = RED_MTRL ;
+	pMeterial[1] = GREEN_MTRL;
 
-	//pMeterial[0].Diffuse.a = 0.5 ;
 	pMeterial[1].Diffuse.a = 0.5 ;
 
 	D3DXCreateTextureFromFile(
@@ -50,8 +50,8 @@ void CBlendTest::preRender()
 
 
 	m_light = initDirectLight(D3DXVECTOR3(0,0,1),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
-	//light = initSpotLight(D3DXVECTOR3(0,0,0),D3DXVECTOR3(0,0,1),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
-	//light = initPointLight(D3DXVECTOR3(0,0,0),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
+	//m_light = initSpotLight(D3DXVECTOR3(0,0,10),D3DXVECTOR3(0,0,1),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
+	//m_light = initPointLight(D3DXVECTOR3(0,0,10),D3DXCOLOR(D3DCOLOR_XRGB(255,255,255)));
 	m_device->SetRenderState(D3DRS_SPECULARENABLE , true) ;
 	m_device->SetRenderState(D3DRS_LIGHTING , true);
 	m_device->SetRenderState(D3DRS_NORMALIZENORMALS,true);
@@ -65,15 +65,15 @@ void CBlendTest::preRender()
 	m_device->SetSamplerState(0,D3DSAMP_ADDRESSU,D3DTADDRESS_WRAP);
 	m_device->SetSamplerState(0,D3DSAMP_ADDRESSV,D3DTADDRESS_WRAP);
 
-	m_device->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
-	//m_device->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
+	//m_device->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_DIFFUSE);
+	m_device->SetTextureStageState(0,D3DTSS_ALPHAARG1,D3DTA_TEXTURE);
 	m_device->SetTextureStageState(0,D3DTSS_ALPHAOP,D3DTOP_SELECTARG1);
 
 	m_device->SetRenderState(D3DRS_SRCBLEND,D3DBLEND_SRCALPHA);
 	m_device->SetRenderState(D3DRS_DESTBLEND,D3DBLEND_INVSRCALPHA);
 
 }
-void CBlendTest::Render()
+void CBlendTest::Render(float timeDelta)
 {
 	if (m_device == NULL)
 		return ;

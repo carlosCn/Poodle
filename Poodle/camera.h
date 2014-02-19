@@ -100,9 +100,11 @@ public:
 	void InitCam(CDeviceWIn32* pDevice );
 	void InitCam(CDeviceWIn32* pDevice , stPerspectiveParams& _param);
 	void ChangeViewDir(CDeviceWIn32* pDevice,float timeDelta);
+	void SetPos(CDeviceWIn32* pDevice,D3DXVECTOR3& _campos , D3DXVECTOR3& _targetpos);
 
 private:
 	CamDir m_CamDir;
 	stPerspectiveParams m_perspective ;
+	
 };
 #endif // __cameraH__

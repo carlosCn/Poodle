@@ -185,6 +185,19 @@ void Camera::InitCam(CDeviceWIn32* pDevice,stPerspectiveParams& _param)
 	m_perspective = _param ;
 	InitCam(pDevice);
 }
+
+void Camera::SetPos(CDeviceWIn32* pDevice,D3DXVECTOR3& _campos , D3DXVECTOR3& _targetpos)
+{
+	if (pDevice && pDevice->GetVedioDevice())
+	{
+		D3DXVECTOR3     up(0.0f, 1.0f, 0.0f);
+		D3DXMATRIX V;
+		D3DXMatrixLookAtLH(&V, &_campos, &_targetpos, &up);
+
+		pDevice->GetVedioDevice()->SetTransform(D3DTS_VIEW, &V);
+	}
+}
+
 void Camera::ChangeViewDir(CDeviceWIn32* pDevice,float timeDelta)
 {
 	if( ::GetAsyncKeyState('W') & 0x8000f )

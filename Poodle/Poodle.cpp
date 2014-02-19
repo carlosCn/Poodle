@@ -1,121 +1,77 @@
 // Poodle.cpp : 定义控制台应用程序的入口点。
 //
 #include "stdafx.h"
-#include<stdio.h>
-#include<iostream>
-#include <Windows.h>
-#include "d3d9.h"
-#include "d3dx9.h"
-#include "WindowBase.h"
+#include "public_define.h"
+
 #include "camera.h"
+#include "Device.h"
+
 #include "BlendTest.h"
+#include "StencilTest.h"
 
 CDeviceWIn32 *mWin32Device = NULL ;
 Camera *pCam = NULL ;
-IDirect3DDevice9* device = NULL ; 
-CBlendTest *pBlendtest = NULL  ;
+CDrawObject *pDrawObject  = NULL;
 
 void ClearDevice()
 {
 	delete pCam ;
+	delete mWin32Device ;
 }
 
 void PreDraw()
 {
-
-	if (NULL == pCam)  
-		return ;
-
-	if (NULL == device && NULL == mWin32Device)  
-		return ;
-
+	if (NULL == pCam)  return ;
+	if ( NULL == mWin32Device  || NULL == mWin32Device->GetVedioDevice())  return ;
 	mWin32Device->InitRenderState();
-
 	//pCam->InitCam(mWin32Device);
-	pCam->InitCam(mWin32Device,stPerspectiveParams(2.4,0.75,1.0,1000.0));
-
-	pBlendtest->preRender();
+	pCam->InitCam(mWin32Device,stPerspectiveParams(1.5,0.75,1.0,1000.0));
+	pCam->SetPos(mWin32Device,D3DXVECTOR3(0, 10.0f, -20.0f),D3DXVECTOR3(10.0f, 5.0f, 0.0f));
+	//绘制自定义$
+	pDrawObject->preRender();
 }
 
 void Draw(float timeDelta)
 {
-	//世界变换 
-	//D3DXMATRIX pX,pY,p ;
-	//static float angleX  = 1.0f;
-	//static float angleY  = 1.0f;
-	//D3DXMatrixRotationX(&pX,angleX);
-	//D3DXMatrixRotationX(&pY,angleY);
+	if (mWin32Device && mWin32Device->GetVedioDevice())
+	{
+		//pCam->ChangeViewDir(mWin32Device,timeDelta);  // 控制视场视角
 
-	//angleX += 0.0005 ;
-	//angleY += 0.0005;
-	//if (angleX > 6.28)
-	//{
-	//	angleX = 0 ;
-	//}
+		mWin32Device->GetVedioDevice()->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
 
-	//if (angleY > 6.28)
-	//{
-	//	angleY = 0 ;
-	//}
+		mWin32Device->GetVedioDevice()->BeginScene();
 
-	//p = pX * pY ;
+		pDrawObject->Render(timeDelta);
 
-	//device->SetTransform(D3DTS_WORLD,&p);
-
-
-	//static float angle = (3.0f * D3DX_PI) / 2.0f;
-
-	//if( ::GetAsyncKeyState(VK_NUMPAD6) & 0x8000f )
-	//	light.Direction.x -= 0.5;
-
-	//if( ::GetAsyncKeyState(VK_NUMPAD4) & 0x8000f )
-	//	light.Direction.x += 0.5;
-
-	//if( ::GetAsyncKeyState(VK_NUMPAD2) & 0x8000f )
-	//	light.Direction.y -= 0.5;
-
-	//if( ::GetAsyncKeyState(VK_NUMPAD8) & 0x8000f )
-	//	light.Direction.y += 0.5;
-
-	pCam->ChangeViewDir(mWin32Device,timeDelta);
-
-	device->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
-
-	device->BeginScene();
-
-	pBlendtest->Render();
-
-	device->EndScene();
-	device->Present(0,0,0,0);
+		mWin32Device->GetVedioDevice()->EndScene();
+		mWin32Device->GetVedioDevice()->Present(0,0,0,0);
+	}
 }
 
 void  EndDraw()
 {
-	delete pBlendtest ;
+	delete pDrawObject ;
 }
 int _tmain(int argc, _TCHAR* argv[])
 {
 	MSG msg;
 
 	mWin32Device = new CDeviceWIn32(stCreateParams(800,600));
-	if (!mWin32Device)
-		return -1 ;
-
-	pBlendtest = new CBlendTest ;
-	if (pBlendtest == NULL)
-		return -1 ;
-
-	pBlendtest->SetDevice(mWin32Device->GetVedioDevice());
+	if (!mWin32Device) return -1 ;
 
 	pCam = new Camera ;
-	if (NULL == pCam )
-		return -1 ;
+	if (NULL == pCam ) return -1 ;
 
+	//pDrawObject = new CBlendTest ;
+	pDrawObject = new CStencilTest ;
+
+	if (pDrawObject == NULL) return -1 ;
+	pDrawObject->SetDevice(mWin32Device->GetVedioDevice());
 
 	PreDraw();
 
 	static float lastTime = (float)timeGetTime(); 
-	while(device)
+	while(mWin32Device && mWin32Device->GetVedioDevice())
 	{
 		if (PeekMessage(&msg,NULL,0,0,PM_REMOVE))
 		{

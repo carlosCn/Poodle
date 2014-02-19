@@ -39,6 +39,15 @@
     <ClInclude Include="BlendTest.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="public_define.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="StencilTest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Poodle.cpp">
@@ -57,6 +66,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BlendTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="public_define.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="StencilTest.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshObject.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

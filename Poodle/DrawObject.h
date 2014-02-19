@@ -22,8 +22,9 @@ public:
 		m_light = _light ;
 	}
 	virtual void preRender()   = 0;
-	virtual void Render()      = 0 ;
+	virtual void Render(float timeDelta )      = 0 ;
 	virtual void afterRender() = 0  ;
+	virtual void changedir(float timeDelta) = 0 ;
 
 protected:
 	IDirect3DDevice9*       m_device;
