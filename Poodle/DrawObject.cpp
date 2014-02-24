@@ -1,5 +1,6 @@
 #include "DrawObject.h"
 
+const DWORD Vertex::FVF = D3DFVF_XYZ /*| D3DFVF_DIFFUSE*/| D3DFVF_NORMAL | D3DFVF_TEX1  ;
 
 CDrawObject::CDrawObject(void):
 m_device(NULL),

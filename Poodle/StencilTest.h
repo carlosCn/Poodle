@@ -2,9 +2,6 @@
 #include "public_define.h"
 #include "DrawObject.h"
 //模板测试 阴影实现 
-
-
-
 struct StencilVetex 
 {
 	StencilVetex(){}
@@ -20,6 +17,8 @@ struct StencilVetex
 	float _u, _v ;
 	static const DWORD FVF;
 };
+
+
 class CStencilTest
 	:public CDrawObject
 {

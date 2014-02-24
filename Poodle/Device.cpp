@@ -17,7 +17,11 @@ m_device(NULL)
 
 CDeviceWIn32::~CDeviceWIn32(void)
 {
-	m_device->Release();
+	if (m_device!=NULL)
+	{
+		m_device->Release();
+	}
+	
 }
 
 void CDeviceWIn32::InitDevice()

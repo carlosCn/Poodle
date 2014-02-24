@@ -48,6 +48,9 @@
     <ClInclude Include="MeshObject.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PMeshTest.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Poodle.cpp">
@@ -75,6 +78,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="MeshObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="PMeshTest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

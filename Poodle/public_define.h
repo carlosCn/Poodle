@@ -3,10 +3,12 @@
 
 #include<stdio.h>
 #include<iostream>
+#include <vector>
 #include <Windows.h>
 #include "d3d9.h"
 #include "d3dx9.h"
 
+using namespace std ;
 
 const D3DXCOLOR      WHITE( D3DCOLOR_XRGB(255, 255, 255) );
 const D3DXCOLOR      BLACK( D3DCOLOR_XRGB(  0,   0,   0) );

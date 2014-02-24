@@ -9,6 +9,9 @@
 #include "BlendTest.h"
 #include "StencilTest.h"
 
+#include "MeshObject.h"
+#include "PMeshTest.h"
+
 CDeviceWIn32 *mWin32Device = NULL ;
 Camera *pCam = NULL ;
 CDrawObject *pDrawObject  = NULL;
@@ -23,11 +26,15 @@ void PreDraw()
 {
 	if (NULL == pCam)  return ;
 	if ( NULL == mWin32Device  || NULL == mWin32Device->GetVedioDevice())  return ;
+
+
+
 	mWin32Device->InitRenderState();
+
 	//pCam->InitCam(mWin32Device);
-	pCam->InitCam(mWin32Device,stPerspectiveParams(1.5,0.75,1.0,1000.0));
-	pCam->SetPos(mWin32Device,D3DXVECTOR3(0, 10.0f, -20.0f),D3DXVECTOR3(10.0f, 5.0f, 0.0f));
-	//绘制自定义$
+	pCam->InitCam(mWin32Device,stPerspectiveParams(2.0,0.75,1.0,1000.0));
+	pCam->SetPos(mWin32Device,D3DXVECTOR3(-8, 4, -12),D3DXVECTOR3(0.0f, 0.0f, 0.0f));
+	//绘制自定义$ss
 	pDrawObject->preRender();
 }
 
@@ -35,7 +42,7 @@ void Draw(float timeDelta)
 {
 	if (mWin32Device && mWin32Device->GetVedioDevice())
 	{
-		//pCam->ChangeViewDir(mWin32Device,timeDelta);  // 控制视场视角
+		pCam->ChangeViewDir(mWin32Device,timeDelta);  // 控制视场视角
 
 		mWin32Device->GetVedioDevice()->Clear(0, 0, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, 0xffffffff, 1.0f, 0);
 
@@ -63,7 +70,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (NULL == pCam ) return -1 ;
 
 	//pDrawObject = new CBlendTest ;
-	pDrawObject = new CStencilTest ;
+	//pDrawObject = new CStencilTest ;
+	//pDrawObject = new CMeshObject ;
+	pDrawObject = new CPMeshTest ;
 
 	if (pDrawObject == NULL) return -1 ;
 	pDrawObject->SetDevice(mWin32Device->GetVedioDevice());
