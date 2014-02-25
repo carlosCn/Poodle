@@ -4,6 +4,7 @@
 #include<stdio.h>
 #include<iostream>
 #include <vector>
+#include <list>
 #include <Windows.h>
 #include "d3d9.h"
 #include "d3dx9.h"

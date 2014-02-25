@@ -82,6 +82,7 @@
     <ClInclude Include="Device.h" />
     <ClInclude Include="DrawObject.h" />
     <ClInclude Include="MeshObject.h" />
+    <ClInclude Include="ParticleBase.h" />
     <ClInclude Include="PMeshTest.h" />
     <ClInclude Include="public_define.h" />
     <ClInclude Include="stdafx.h" />
@@ -95,6 +96,7 @@
     <ClCompile Include="Device.cpp" />
     <ClCompile Include="DrawObject.cpp" />
     <ClCompile Include="MeshObject.cpp" />
+    <ClCompile Include="ParticleBase.cpp" />
     <ClCompile Include="PMeshTest.cpp" />
     <ClCompile Include="Poodle.cpp" />
     <ClCompile Include="public_define.cpp" />
